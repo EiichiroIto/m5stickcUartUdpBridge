@@ -5,6 +5,18 @@
 #define TelloAddress "192.168.10.1"
 #define TelloCommandPort 8889
 
+enum TelloMode {
+  tm_none = 0, tm_takeoff, tm_land, tm_off, tm_max
+};
+
+const char *tm_text[] = {
+  "none",
+  "takeoff",
+  "land",
+  "power off",
+  "???"
+};
+
 class TelloInfo {
   public:
     char ssid[128];
@@ -13,6 +25,7 @@ class TelloInfo {
     char status[80];
     bool connected;
     char message[256];
+    int mode;
 
     TelloInfo() {
       ssid[0] = '\0';
@@ -20,7 +33,11 @@ class TelloInfo {
       status[0] = '\0';
       message[0] = '\0';
       connected = false;
+      mode = tm_none;
     };
+    void next() {
+      mode = (mode + 1) % tm_max;
+    }
 };
 
 TelloInfo Tello;
@@ -35,6 +52,7 @@ void error()
 //SSID: xxxx
 //Tello: xxxx:yyyy
 //msg: xxx
+//mode: xxx
 
 void updateStatus(bool refresh, const char *status)
 {
@@ -52,6 +70,8 @@ void updateStatus(bool refresh, const char *status)
   M5.Lcd.printf("Tello: %s:%d ", Tello.address, Tello.commandPortNo);
   M5.Lcd.setCursor(0, 30);
   M5.Lcd.printf("msg: %s ", Tello.message);
+  M5.Lcd.setCursor(0, 70);
+  M5.Lcd.printf("mode: %s ", tm_text[Tello.mode]);
 }
 
 bool wifi_connect(const char *ssid, const char *passwd)
@@ -105,11 +125,13 @@ void send(const char *buf)
     updateStatus(true, "too long message");
     return;
   }
-  Udp.beginPacket(Tello.address, Tello.commandPortNo);
-  Udp.write((const uint8_t *) buf, strlen(buf));
-  Udp.endPacket();  
   strcpy(Tello.message, buf);
   updateStatus(false, "sent");
+  if (Tello.connected) {
+    Udp.beginPacket(Tello.address, Tello.commandPortNo);
+    Udp.write((const uint8_t *) buf, strlen(buf));
+    Udp.endPacket();
+  }
 }
 
 void setup()
@@ -135,15 +157,31 @@ void setup()
   send("command");
 }
 
+void execute()
+{
+  switch (Tello.mode) {
+  case tm_takeoff:
+    send("takeoff");
+    break;
+  case tm_land:
+    send("land");
+    break;
+  case tm_off:
+    M5.Axp.DeepSleep(1000000);
+    break;
+  }
+}
+
 void loop()
 {
   M5.update();
   if (M5.BtnA.wasPressed()) {
-    send("takeoff");
+    execute();
     delay(100);
   }
   if (M5.BtnB.wasPressed()) {
-    send("land");
+    Tello.next();
+    updateStatus(true, NULL);
     delay(100);
   }
   if (Serial2.available()) {
