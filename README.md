@@ -1,5 +1,5 @@
 ## Overview
-![Entire Screen1](https://raw.githubusercontent.com/EiichiroIto/m5stickcUartUdpBridge/master/images/microbit-tello.gif)
+![Overview](https://raw.githubusercontent.com/EiichiroIto/m5stickcUartUdpBridge/master/images/microbit-tello.png)
 
 ## Connection
     micro:bit      M5StickC
@@ -9,7 +9,7 @@
     radio-UART     UART-UDP
 
 ## micro:witch program (radio-UART bridge program)
-![Entire Screen1](https://raw.githubusercontent.com/EiichiroIto/m5stickcUartUdpBridge/master/images/tello-uart.gif)
+![microwitch1](https://raw.githubusercontent.com/EiichiroIto/m5stickcUartUdpBridge/master/images/tello-uart.gif)
 
 ## MicroPython program (radio-UART bridge program)
 ```
