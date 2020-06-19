@@ -1,13 +1,17 @@
-## Connection
-    M5StickC   micro:bit
-       GND ---    GND 
-       3V3 ---    3V
-       G36 ---    Pin0
+## Overview
+![Entire Screen1](https://raw.githubusercontent.com/EiichiroIto/m5stickcUartUdpBridge/master/images/microbit-tello.gif)
 
-## micro:witch program
+## Connection
+    micro:bit      M5StickC
+       GND     ----   GND
+       3V      ----   3V3
+       Pin0    ----   G36
+    radio-UART     UART-UDP
+
+## micro:witch program (radio-UART bridge program)
 ![Entire Screen1](https://raw.githubusercontent.com/EiichiroIto/m5stickcUartUdpBridge/master/images/tello-uart.gif)
 
-## MicroPython program
+## MicroPython program (radio-UART bridge program)
 ```
 import microbit
 from microbit import uart
