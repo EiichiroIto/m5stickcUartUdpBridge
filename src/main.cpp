@@ -26,6 +26,7 @@ class TelloInfo {
     bool connected;
     char message[256];
     int mode;
+    double vbat;      // M5StickC VBat
 
     TelloInfo() {
       ssid[0] = '\0';
@@ -34,6 +35,7 @@ class TelloInfo {
       message[0] = '\0';
       connected = false;
       mode = tm_none;
+      vbat = 0.0;
     };
     void next() {
       mode = (mode + 1) % tm_max;
@@ -53,6 +55,7 @@ void error()
 //Tello: xxxx:yyyy
 //msg: xxx
 //mode: xxx
+//bat: %.1f (%d%%)
 
 void updateStatus(bool refresh, const char *status)
 {
@@ -72,6 +75,15 @@ void updateStatus(bool refresh, const char *status)
   M5.Lcd.printf("msg: %s ", Tello.message);
   M5.Lcd.setCursor(0, 70);
   M5.Lcd.printf("mode: %s ", tm_text[Tello.mode]);
+  Tello.vbat = M5.Axp.GetVbatData() * 1.1 / 1000;
+  int charge = int8_t((Tello.vbat - 3.0) / 1.2 * 100);
+  if(charge > 100){
+    charge = 100;
+  }else if(charge < 0){
+    charge = 0;
+  }
+  M5.Lcd.setCursor(0, 60);
+  M5.Lcd.printf("bat: %.2fV (%3d%%) ", Tello.vbat, charge);
 }
 
 bool wifi_connect(const char *ssid, const char *passwd)
@@ -121,15 +133,24 @@ WiFiUDP Udp;
 
 void send(const char *buf)
 {
-  if (strlen(buf) > sizeof(Tello.message) - 1) {
+  int len = strlen(buf);
+  if (len > sizeof(Tello.message) - 1) {
     updateStatus(true, "too long message");
     return;
   }
   strcpy(Tello.message, buf);
+  char c = Tello.message[len - 1];
+  if (c == '\r' || c == '\n') {
+    Tello.message[-- len] = '\0';
+  }
+  if (len == 0) {
+    updateStatus(true, "blank message");
+    return;
+  }
   updateStatus(false, "sent");
   if (Tello.connected) {
     Udp.beginPacket(Tello.address, Tello.commandPortNo);
-    Udp.write((const uint8_t *) buf, strlen(buf));
+    Udp.write((const uint8_t *) Tello.message, len);
     Udp.endPacket();
   }
 }
