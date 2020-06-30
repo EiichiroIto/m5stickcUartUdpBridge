@@ -6,14 +6,14 @@
 #define TelloCommandPort 8889
 
 enum TelloMode {
-  tm_none = 0, tm_takeoff, tm_land, tm_off, tm_max
+  tm_none = 0, tm_takeoff, tm_land, tm_reset, tm_max
 };
 
 const char *tm_text[] = {
   "none",
   "takeoff",
   "land",
-  "power off",
+  "reset",
   "???"
 };
 
@@ -187,8 +187,8 @@ void execute()
   case tm_land:
     send("land");
     break;
-  case tm_off:
-    M5.Axp.DeepSleep(1000000);
+  case tm_reset:
+    ESP.restart();
     break;
   }
 }
